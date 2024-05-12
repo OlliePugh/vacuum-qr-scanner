@@ -17,9 +17,16 @@ import (
 	"github.com/tebeka/selenium"
 )
 
+const (
+	httpPort = 3333
+	seleniumPort = 8080
+	streamUrl = "https://play.ollieq.co.uk/admin/streams/1"
+	chromeDriverPath = "./chromedriver.exe"
+)
+
 // Begin viewing the stream
 func setupStream(wd selenium.WebDriver) error {
-	err := wd.Get("https://play.ollieq.co.uk/admin/streams/1")
+	err := wd.Get(streamUrl)
 	
 	if err != nil {
 		return err
@@ -107,8 +114,8 @@ func getRoot(w http.ResponseWriter, _ *http.Request, wd selenium.WebDriver) {
 }
 
 func main() {
-	const port = 8080
-	service, err := selenium.NewChromeDriverService("./chromedriver.exe", 8080)
+
+	service, err := selenium.NewChromeDriverService(chromeDriverPath, seleniumPort)
 	if err != nil {
 		panic(err)
 	}
@@ -117,7 +124,7 @@ func main() {
 
 	// Connect to the WebDriver instance running locally.
 	caps := selenium.Capabilities{"browserName": "chrome"}
-	wd, err := selenium.NewRemote(caps, fmt.Sprintf("http://localhost:%d/wd/hub", port))
+	wd, err := selenium.NewRemote(caps, fmt.Sprintf("http://localhost:%d/wd/hub", seleniumPort))
 	wd.ResizeWindow("", 1920, 1200)
 
 	if err != nil {
@@ -135,7 +142,7 @@ func main() {
 		getRoot(w, r, wd)
 	})
 
-	err = http.ListenAndServe(":3333", nil)
+	err = http.ListenAndServe(fmt.Sprint(":", httpPort), nil)
 
 	if errors.Is(err, http.ErrServerClosed) {
 		fmt.Printf("server closed\n")
