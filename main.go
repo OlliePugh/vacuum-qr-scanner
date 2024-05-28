@@ -114,7 +114,6 @@ func getRoot(w http.ResponseWriter, _ *http.Request, wd selenium.WebDriver) {
 }
 
 func main() {
-
 	service, err := selenium.NewChromeDriverService(chromeDriverPath, seleniumPort)
 	if err != nil {
 		panic(err)
@@ -125,11 +124,12 @@ func main() {
 	// Connect to the WebDriver instance running locally.
 	caps := selenium.Capabilities{"browserName": "chrome"}
 	wd, err := selenium.NewRemote(caps, fmt.Sprintf("http://localhost:%d/wd/hub", seleniumPort))
-	wd.ResizeWindow("", 1920, 1200)
 
 	if err != nil {
 		panic(err)
 	}
+
+	wd.ResizeWindow("", 1920, 1200)
 
 	if err := setupStream(wd); err != nil {
 		fmt.Printf("error setting up stream: %s\n", err)
