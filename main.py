@@ -10,6 +10,7 @@ from selenium.webdriver.chrome.options import Options
 from PIL import Image
 import numpy as np
 import cv2
+from qreader import QReader
 
 http_port = 3333
 selenium_port = 8080
@@ -17,6 +18,9 @@ stream_url = "https://play.ollieq.co.uk/admin/streams/1"
 chrome_driver_path = "./chromedriver"
 
 app = Flask(__name__)
+
+# Create a QReader instance
+qreader = QReader()
 
 def setup_stream(driver):
     driver.get(stream_url)
@@ -28,20 +32,17 @@ def detect_spot_id(img):
     # Convert the image to grayscale
     img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-    # Initialize the QRCode detector
-    qr_decoder = cv2.QRCodeDetector()
+    decoded_text = qreader.detect_and_decode(image=img)
 
-    # Detect and decode the QR code
-    data, points, _ = qr_decoder.detectAndDecode(img)
-    
-    if points is not None:
+    if decoded_text is not None:
         try:
-            spot_id = int(data)
+            spot_id = int(decoded_text[0])
+            print("found spot id:", spot_id)
             return spot_id
-        except ValueError:
+        except:
             return -1
-    else:
-        return -1
+    
+    return -1
 
 def process_image(opencv_image):
     # Increase contrast
@@ -91,6 +92,7 @@ def get_root():
     
     spot_id = detect_spot_id(processed_image)
     if spot_id == -1:
+        print("error scanning QR code")
         return "Error scanning QR code", 500
     
     return jsonify({"spot_id": spot_id})
